@@ -1,0 +1,11 @@
+{
+    "settings": 
+    {
+        "token": "",
+        "group_token": "",
+        "names": ["name"],
+        "base_type": "group",
+        "admins": [1]
+    }
+}
+        
