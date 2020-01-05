@@ -6,11 +6,11 @@ from utils import *
 bots = [{
 	'token': config.token,
 	'type': 'page',
-	'version': '5.81'
+	'version': '5.90'
 	},{
 	'token': config.group_token,
 	'type': 'group',
-	'version': '5.81'
+	'version': '5.90'
 }]
 
 cmds.update(load(cmds))

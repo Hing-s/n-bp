@@ -202,7 +202,7 @@ class CLongPoll:
 		self._bots = list(filter(lambda x: x is not None, self._bots))
 		
 		if not self._bots:
-			sys.exit('No bots is launched successfully')
+			sys.exit('No bots was launched successfully')
 		
 		for bot in self._bots:
 			bot.setBots(self._bots)

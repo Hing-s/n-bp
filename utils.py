@@ -64,7 +64,6 @@ class Utils:
 			if os.path.exists('access/{}/{}'.format(acs[i], uid)):
 				return i
 		
-		print(acs)
 		with open('access/{}/{}'.format(acs[0] if uid in config.admins else acs[-1], uid), 'w') as f:
 			f.write('')
 		
@@ -76,8 +75,6 @@ class Utils:
 			return False
 		
 		access = self._getUser_access(event.userid, self.cmds['acs'])
-		
-		print(access , self.cmds[answ[1]]['access'])
 		
 		if access < self.cmds[answ[1]]['access']:
 			event.message_send('Недостаточно привелегий')
