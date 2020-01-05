@@ -2,6 +2,7 @@ import urllib3
 import json
 import time
 import threading
+import sys
 from utils import utils
 
 API_URL = 'https://api.vk.com/method/'
@@ -184,13 +185,27 @@ class CLongPoll:
 		self._count = 0
 		
 		for bot in self._bots:
-			bot.setBots(self._bots)
 			if not self._isPage(bot):
-				bot.id = self._check(self.request('https://api.vk.com/method/groups.getById', params={'access_token': bot.token, 'v': bot.version}))['response'][0]['id']
+				bot.id = self._check(self.request('https://api.vk.com/method/groups.getById', params={'access_token': bot.token, 'v': bot.version}))
 			else:
-				bot.id = self._check(self.request('https://api.vk.com/method/users.get', params={'access_token': bot.token, 'v': bot.version}))['response'][0]['id']
+				bot.id = self._check(self.request('https://api.vk.com/method/users.get', params={'access_token': bot.token, 'v': bot.version}))
+			
+			if bot.id:
+				bot.id = bot.id['response'][0]['id']
+				threading.Thread(target=self._get, args=(bot,)).start()
+			else:
+				self._bots[self._bots.index(bot)] = None
 		
-			threading.Thread(target=self._get, args=(bot,)).start()
+		self._setBots()
+	
+	def _setBots(self):
+		self._bots = list(filter(lambda x: x is not None, self._bots))
+		
+		if not self._bots:
+			sys.exit('No bots is launched successfully')
+		
+		for bot in self._bots:
+			bot.setBots(self._bots)
 		
 	def request(self, url, params={}, type='GET', timeout=90):
 		if self._count >= 200:
@@ -221,6 +236,7 @@ class CLongPoll:
 				self.updates = None
 		
 	def _get(self, bot):
+		time.sleep(0.1)
 		while True:
 			try:
 				if not self._isPage(bot):
@@ -257,6 +273,6 @@ class CLongPoll:
 			
 	def _check(self, data):
 		if "error" in data:
-			raise ConnectionError(data["error"]["error_msg"])
+			return print(data["error"]["error_msg"])
 		
 		return data

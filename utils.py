@@ -59,22 +59,25 @@ class Utils:
 		
 		del answ, event
 		
-	def _getUser_access(self, uid):
-		if os.path.exists('users/{}'.format(uid)):
-			with open('users/{}'.format(uid)) as f:
-				return int(f.read())
-		else:
-			with open('users/{}'.format(uid), 'w') as f:
-				f.write('0' if uid not in config.admins else '2')
-			
-			return 0 if uid not in config.admins else 2
+	def _getUser_access(self, uid, acs):
+		for i in range(len(acs), 0):
+			if os.path.exists('access/{}/{}'.format(acs[i], uid)):
+				return i
+		
+		print(acs)
+		with open('access/{}/{}'.format(acs[0] if uid in config.admins else acs[-1], uid), 'w') as f:
+			f.write('')
+		
+		return len(acs)-1 if uid in config.admins else 0
 		
 	def check_access(self, answ, event):
 		if len(answ) < self.cmds[answ[1]]['args']:
 			event.message_send('Недостаточно аргументов')
 			return False
 		
-		access = self._getUser_access(event.userid)
+		access = self._getUser_access(event.userid, self.cmds['acs'])
+		
+		print(access , self.cmds[answ[1]]['access'])
 		
 		if access < self.cmds[answ[1]]['access']:
 			event.message_send('Недостаточно привелегий')

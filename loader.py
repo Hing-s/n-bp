@@ -13,6 +13,9 @@ def load(cmds):
 	import importlib
 	from utils import utils
 	
+	if not os.path.exists('access'):
+		os.mkdir('access')
+	
 	cmds.clear()
 	accesses = [f for f in os.listdir('plugins') if os.path.isdir('plugins/{}'.format(f)) and '__' not in f]
 	
@@ -24,6 +27,9 @@ def load(cmds):
 				if os.path.isfile('plugins/{}/{}.py'.format(access, plug)):
 					plugin = importlib.reload(__import__(plug))
 					cmd = plug.split(':')[0]
+					
+					if not os.path.exists('access/{}'.format(access)):
+						os.mkdir('access/{}'.format(access))
 					
 					cmds[cmd] = {}
 					cmds[cmd]['access'] = access
@@ -58,6 +64,7 @@ def load(cmds):
 		sys.path.remove('plugins/{}'.format(access))
 	
 	cmds['sorted'] = tuple(sorted(cmds, key=lambda x: cmds[x]['priority']))
+	cmds['acs'] = sorted(ACCESSES, key=lambda x: ACCESSES[x], reverse=True)
 	
 	utils.set('cmds', cmds)
 	
