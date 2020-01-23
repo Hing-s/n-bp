@@ -60,7 +60,7 @@ class Utils:
 		del answ, event
 		
 	def _getUser_access(self, uid, acs):
-		for i in range(len(acs), 0):
+		for i in range(len(acs)):
 			if os.path.exists('access/{}/{}'.format(acs[i], uid)):
 				return i
 		

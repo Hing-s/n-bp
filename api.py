@@ -1,3 +1,4 @@
+import random
 import urllib3
 import json
 import time
@@ -23,6 +24,7 @@ class Event:
 		self.bot = bot
 		self.updates = updates
 		self.utils = utils
+		self.bot.message_send = self.message_send
 		
 		del updates, bot
 	
@@ -43,7 +45,6 @@ class Event:
 			self.id = updates[1]
 			self.text = updates[5]
 			self.peer_id = updates[3]
-			self.type = 4
 			
 			if self.peer_id > 2000000000:
 				self.userid = int(updates[6]['from'])
@@ -111,6 +112,7 @@ class Event:
 		
 		fields['message'] = text
 		fields['peer_id'] = peer_id
+		
 		
 		if 'files' in fields:
 			attachment = self._upload(fields.pop('files'))
@@ -231,9 +233,8 @@ class CLongPoll:
 				del updates
 			except Exception as e:
 				print(e)
-				time.sleep(7)
-				bot.data = self._get(bot)
-				self.updates = None
+				time.sleep(random.randint(4, 8))
+				self._get(bot)
 		
 	def _get(self, bot):
 		time.sleep(0.1)
@@ -247,10 +248,10 @@ class CLongPoll:
 				if 'error' in lp:
 					time.sleep(6.5)
 				else:
-					print('Лонгполл {} получен!'.format(self._bots.index(bot)))
+					print('Лонгполл {} получен!'.format(bot.id if self._isPage(bot) else -bot.id))
 					break
 			except Exception as e:
-				print(e)
+				print('LP {}: {}'.format(bot.id if self._isPage(bot) else -bot.id, e))
 
 		bot.data = lp['response']
 		
@@ -273,6 +274,6 @@ class CLongPoll:
 			
 	def _check(self, data):
 		if "error" in data:
-			return print(data["error"]["error_msg"])
+			return print(data["error"])
 		
 		return data
