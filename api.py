@@ -8,6 +8,28 @@ from utils import utils
 
 API_URL = 'https://api.vk.com/method/'
 
+class MethExecutor:
+	def __init__(self, meth, bot):
+		self._meth = meth
+		self._bot = bot
+	
+	def __call__(self, type='POST', **params):
+		return self._bot.method(self._meth, **params, type=type)
+
+class MethWrapper(object):
+	def __init__(self, bot, method = ''):
+		self._bot = bot
+		self._method = method
+	
+	def __getattribute__(self, key):
+		if '_' in key:
+			return super().__getattribute__(key)
+		
+		if not self._method:
+			return MethWrapper(self._bot, key)
+		else:
+			return MethExecutor('{}.{}'.format(self._method, key), self._bot)
+
 class Event:
 	def __init__(self, bot, updates):        
 		self.userid = None
@@ -15,6 +37,7 @@ class Event:
 		self.id = None
 		self.text = ''
 		self.type = None
+		self.wrap = MethWrapper(bot)
 		
 		if isinstance(updates, dict):
 			self._group_event(updates)
@@ -75,7 +98,7 @@ class Event:
 					if type == 'photo':
 						servers[type] = self.bot.method('photos.getMessagesUploadServer', type='POST')
 					else:
-						servers[type] = self.bot.method('docs.getMessagesUploadServer', peer_id=self.peer_id, type='POST')
+						servers[type] = self.bot.method('docs.getMessagesUploadServer', peer_id=self.peer_id)
 					
 					if 'error' in servers[type]:
 						print(servers[type]['error']['error_msg'])
@@ -93,9 +116,9 @@ class Event:
 				response = self.bot.request(servers[type]['response']['upload_url'], 'POST', **content['data'])
 				
 				if type == 'photo':
-					response = self.bot.method('photos.saveMessagesPhoto', **{'album_id': -3, 'server': response['server'], 'photo': response['photo'], 'hash': response['hash']}, type='POST')
+					response = self.bot.method('photos.saveMessagesPhoto', **{'album_id': -3, 'server': response['server'], 'photo': response['photo'], 'hash': response['hash']})
 				else:
-					response = self.bot.method('docs.save', file=response['file'], type='POST')
+					response = self.bot.method('docs.save', file=response['file'])
 				
 				if 'error' in response:
 					print(response['error']['error_msg'])
@@ -113,6 +136,8 @@ class Event:
 		fields['message'] = text
 		fields['peer_id'] = peer_id
 		
+		if float(self.bot.version) >= 5.90 and 'random_id' not in fields:
+			fields['random_id'] = 0
 		
 		if 'files' in fields:
 			attachment = self._upload(fields.pop('files'))
@@ -122,7 +147,7 @@ class Event:
 			else:
 				fields['attachment'] = attachment
 		
-		return self.bot.method('messages.send', type='POST', **fields)
+		return self.bot.method('messages.send', **fields)
 			
 
 class Bot:
@@ -152,7 +177,7 @@ class Bot:
 		
 		return json.loads(self._pm.request(type.upper(), url, fields=params).data.decode())
 		
-	def method(self, method, type='GET', **params):
+	def method(self, method, type='POST', **params):
 		if self._count >= 10:
 			self._pm.clear()
 			self._count = 0
@@ -209,7 +234,7 @@ class CLongPoll:
 		for bot in self._bots:
 			bot.setBots(self._bots)
 		
-	def request(self, url, params={}, type='GET', timeout=90):
+	def request(self, url, params={}, type='POST', timeout=90):
 		if self._count >= 200:
 			self._pm.clear()
 			self._count = 0
